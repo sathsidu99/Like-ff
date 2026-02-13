@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF LIKE BOOSTER • DARK NEXUS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0c0f;
+            font-family: 'Segoe UI', sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(20, 30, 40, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 40px;
+            padding: 40px;
+            border: 1px solid #0ff;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
+        }
+        h1 { 
+            text-align: center; 
+            font-size: 3rem; 
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #0ff, #f0f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .info { 
+            background: #1e2a36; 
+            padding: 20px; 
+            border-radius: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #0ff;
+        }
+        .error { 
+            background: #330000; 
+            border-left: 5px solid #ff0000;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            color: #ffaaaa;
+        }
+        .btn {
+            background: #0ff;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .btn:hover { background: #fff; box-shadow: 0 0 30px #0ff; }
+        input, select {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 30px;
+            border: 2px solid #0ff;
+            background: #1e2a36;
+            color: white;
+            font-size: 1rem;
+        }
+        .token-badge {
+            display: inline-block;
+            background: #1e2a36;
+            padding: 10px 20px;
+            border-radius: 30px;
+            margin: 5px;
+            border: 1px solid #0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ LIKE BOOSTER ⚡</h1>
+        
+        <div class="info" id="tokenInfo">
+            Loading token information...
+        </div>
+
+        <div class="error" id="errorMsg" style="display: none;"></div>
+
+        <input type="number" id="uid" placeholder="Enter UID" value="12345678">
+        
+        <select id="server">
+            <option value="IND">🇮🇳 IND (India)</option>
+            <option value="BR">🇧🇷 BR (Brazil)</option>
+            <option value="US">🇺🇸 US (USA)</option>
+            <option value="SAC">🌎 SAC</option>
+            <option value="NA">🇨🇦 NA</option>
+            <option value="BD">🇧🇩 BD</option>
+        </select>
+
+        <div style="margin: 20px 0;">
+            <label>
+                <input type="checkbox" id="random" checked> Random Batch Mode
+            </label>
+        </div>
+
+        <button class="btn" id="boostBtn">
+            <i class="fas fa-bolt"></i> BOOST NOW
+        </button>
+
+        <div id="result" style="margin-top: 30px; display: none;">
+            <h3>RESULT:</h3>
+            <pre id="resultData" style="background: #1e2a36; padding: 15px; border-radius: 10px;"></pre>
+        </div>
+    </div>
+
+    <script>
+        async function loadTokenInfo() {
+            try {
+                const res = await fetch('/token_info');
+                const data = await res.json();
+                let html = '<strong>📊 TOKEN STATUS:</strong><br>';
+                for (const [server, counts] of Object.entries(data)) {
+                    html += `<span class="token-badge">${server}: ${counts.regular_tokens} regular | ${counts.visit_tokens} visit</span> `;
+                }
+                document.getElementById('tokenInfo').innerHTML = html;
+            } catch (e) {
+                document.getElementById('tokenInfo').innerHTML = '⚠️ Using mock token data';
+            }
+        }
+
+        loadTokenInfo();
+
+        document.getElementById('boostBtn').addEventListener('click', async () => {
+            const uid = document.getElementById('uid').value;
+            const server = document.getElementById('server').value;
+            const random = document.getElementById('random').checked;
+            
+            const btn = document.getElementById('boostBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSING...';
+            btn.disabled = true;
+            
+            document.getElementById('errorMsg').style.display = 'none';
+            
+            try {
+                const res = await fetch(`/like?uid=${uid}&server_name=${server}&random=${random}`);
+                const data = await res.json();
+                
+                if (data.error) {
+                    document.getElementById('errorMsg').innerHTML = '❌ ' + data.error;
+                    document.getElementById('errorMsg').style.display = 'block';
+                    document.getElementById('result').style.display = 'none';
+                } else {
+                    document.getElementById('resultData').innerHTML = JSON.stringify(data, null, 2);
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('errorMsg').style.display = 'none';
+                }
+            } catch (error) {
+                document.getElementById('errorMsg').innerHTML = '❌ Connection error: ' + error.message;
+                document.getElementById('errorMsg').style.display = 'block';
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
